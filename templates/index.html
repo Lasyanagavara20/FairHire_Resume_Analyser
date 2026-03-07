@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>AI Resume Analyzer</title>
+
+<style>
+
+body{
+font-family: Arial, sans-serif;
+background:#f5f7fb;
+text-align:center;
+}
+
+.container{
+width:750px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+}
+
+h1{
+color:#333;
+}
+
+textarea{
+width:90%;
+padding:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+input[type="file"]{
+margin-top:10px;
+}
+
+button{
+background:#28a745;
+color:white;
+padding:12px 20px;
+border:none;
+border-radius:5px;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#218838;
+}
+
+.progress{
+width:100%;
+background:#ddd;
+border-radius:10px;
+margin-top:20px;
+}
+
+.progress-bar{
+height:25px;
+background:#28a745;
+border-radius:10px;
+text-align:center;
+color:white;
+line-height:25px;
+font-weight:bold;
+}
+
+.result{
+margin-top:30px;
+text-align:left;
+}
+
+.skills{
+padding:10px;
+border-radius:5px;
+margin-top:10px;
+}
+
+.matched{
+background:#e8f5e9;
+color:#2e7d32;
+}
+
+.missing{
+background:#ffebee;
+color:#c62828;
+}
+
+.analysis{
+background:#f1f3f6;
+padding:10px;
+border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>AI Resume Analyzer</h1>
+
+<form id="uploadForm">
+
+<label><b>Upload Resume</b></label><br>
+<input type="file" name="resume" required>
+
+<br><br>
+
+<label><b>Paste Job Description</b></label><br>
+
+<textarea name="job_description" rows="6" placeholder="Paste Job Description Here..." required></textarea>
+
+<br><br>
+
+<button type="submit">Analyze Resume</button>
+
+</form>
+
+<div id="result" class="result"></div>
+
+</div>
+
+<script>
+
+document.getElementById("uploadForm").onsubmit = async function(e){
+
+e.preventDefault()
+
+let formData = new FormData(this)
+
+let response = await fetch("/upload",{
+method:"POST",
+body:formData
+})
+
+let data = await response.json()
+
+if(data.error){
+document.getElementById("result").innerHTML = `<p style="color:red">${data.error}</p>`
+return
+}
+
+let score = data.score
+
+let matched = data.matched_skills.map(skill => `✔ ${skill}`).join("<br>")
+let missing = data.missing_skills.map(skill => `✘ ${skill}`).join("<br>")
+
+document.getElementById("result").innerHTML = `
+
+<h3>Resume Match Score</h3>
+
+<div class="progress">
+<div class="progress-bar" style="width:${score}%">${score}%</div>
+</div>
+
+<h3>Matched Skills</h3>
+<div class="skills matched">
+${matched || "No matched skills detected"}
+</div>
+
+<h3>Missing Skills</h3>
+<div class="skills missing">
+${missing || "No missing skills"}
+</div>
+
+<h3>Analysis</h3>
+<div class="analysis">
+${data.explanation}
+</div>
+
+`
+
+}
+
+</script>
+
+</body>
+
+</html>
