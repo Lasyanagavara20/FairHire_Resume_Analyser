@@ -26,11 +26,12 @@ h1{
 color:#333;
 }
 
-textarea{
+select, textarea{
 width:90%;
 padding:10px;
 border-radius:5px;
 border:1px solid #ccc;
+margin-top:10px;
 }
 
 input[type="file"]{
@@ -95,6 +96,12 @@ padding:10px;
 border-radius:5px;
 }
 
+.mode{
+margin-top:15px;
+font-weight:bold;
+color:#555;
+}
+
 </style>
 
 </head>
@@ -112,9 +119,22 @@ border-radius:5px;
 
 <br><br>
 
+<!-- 🔥 NEW: ROLE DROPDOWN -->
+<label><b>Select Role (Optional)</b></label><br>
+
+<select name="role" id="roleSelect">
+<option value="">-- Use Custom Job Description --</option>
+<option value="Software Developer">Software Developer</option>
+<option value="Data Analyst">Data Analyst</option>
+<option value="Web Developer">Web Developer</option>
+<option value="Machine Learning Engineer">Machine Learning Engineer</option>
+</select>
+
+<br><br>
+
 <label><b>Paste Job Description</b></label><br>
 
-<textarea name="job_description" rows="6" placeholder="Paste Job Description Here..." required></textarea>
+<textarea id="jdBox" name="job_description" rows="6" placeholder="Paste Job Description Here..."></textarea>
 
 <br><br>
 
@@ -127,6 +147,21 @@ border-radius:5px;
 </div>
 
 <script>
+
+// 🔥 Disable textarea when role selected
+const roleSelect = document.getElementById("roleSelect");
+const jdBox = document.getElementById("jdBox");
+
+roleSelect.addEventListener("change", () => {
+    if(roleSelect.value !== ""){
+        jdBox.disabled = true;
+        jdBox.placeholder = "Using predefined Job Description...";
+    } else {
+        jdBox.disabled = false;
+        jdBox.placeholder = "Paste Job Description Here...";
+    }
+});
+
 
 document.getElementById("uploadForm").onsubmit = async function(e){
 
@@ -152,6 +187,8 @@ let matched = data.matched_skills.map(skill => `✔ ${skill}`).join("<br>")
 let missing = data.missing_skills.map(skill => `✘ ${skill}`).join("<br>")
 
 document.getElementById("result").innerHTML = `
+
+<div class="mode">Mode: ${data.selected_role}</div>
 
 <h3>Resume Match Score</h3>
 

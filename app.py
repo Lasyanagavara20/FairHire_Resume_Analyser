@@ -4,6 +4,7 @@ from preprocess import clean_text
 from similarity import calculate_similarity
 from explainability import generate_explanation
 from skills_matcher import compare_skills
+from common_jds import common_jds   
 
 app = Flask(__name__)
 
@@ -22,38 +23,43 @@ def upload_resume():
 
         file = request.files['resume']
         job_description = request.form.get("job_description")
+        selected_role = request.form.get("role")   # 👈 NEW
 
         if file.filename == "":
             return jsonify({"error": "No file selected"})
 
+        # 🔥 If role selected → use embedded JD
+        if selected_role and selected_role in common_jds:
+            job_description = common_jds[selected_role]
+
         if not job_description:
             return jsonify({"error": "Job description missing"})
 
-        # Extract resume text
+        # 📄 Extract resume text
         resume_text = extract_text(file)
 
-        # Clean text
+        # 🧹 Clean text
         processed_resume = clean_text(resume_text)
         processed_jd = clean_text(job_description)
 
-        # Similarity score
+        # 🎯 Similarity score
         score = calculate_similarity(processed_resume, processed_jd)
 
-        # Skill comparison
+        # 🧠 Skill comparison
         matched_skills, missing_skills = compare_skills(processed_resume, processed_jd)
 
-        # Explanation
+        # 📊 Explanation
         explanation = generate_explanation(processed_resume)
 
         return jsonify({
             "score": round(score * 100, 2),
             "matched_skills": matched_skills,
             "missing_skills": missing_skills,
-            "explanation": explanation
+            "explanation": explanation,
+            "selected_role": selected_role if selected_role else "Custom JD"   # 👈 NEW
         })
 
     except Exception as e:
-
         return jsonify({
             "error": str(e)
         })
