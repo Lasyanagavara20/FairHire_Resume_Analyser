@@ -1,222 +1,466 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+    <title>AI Resume Analyzer</title>
 
-<title>AI Resume Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-<style>
+    <style>
+        body{
+            font-family: 'Inter', sans-serif;
+            margin:0;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
 
-body{
-font-family: Arial, sans-serif;
-background:#f5f7fb;
-text-align:center;
-}
+        body.dark{
+            background: linear-gradient(135deg,#111827,#1f2937);
+            color:#f9fafb;
+        }
 
-.container{
-width:750px;
-margin:auto;
-background:white;
-padding:30px;
-border-radius:10px;
-box-shadow:0px 4px 10px rgba(0,0,0,0.1);
-}
+        .top-bar{
+            width:720px;
+            margin:20px auto 0;
+            display:flex;
+            justify-content:flex-end;
+        }
 
-h1{
-color:#333;
-}
+        .toggle-btn{
+            border:none;
+            padding:10px 16px;
+            border-radius:999px;
+            cursor:pointer;
+            font-size:14px;
+            background:#ffffff;
+            color:#111827;
+            box-shadow:0 4px 12px rgba(0,0,0,0.15);
+            transition:0.3s;
+        }
 
-select, textarea{
-width:90%;
-padding:10px;
-border-radius:5px;
-border:1px solid #ccc;
-margin-top:10px;
-}
+        body.dark .toggle-btn{
+            background:#374151;
+            color:#f9fafb;
+        }
 
-input[type="file"]{
-margin-top:10px;
-}
+        .main{
+            width:720px;
+            margin:20px auto 50px;
+            background:white;
+            padding:35px;
+            border-radius:20px;
+            box-shadow:0 15px 40px rgba(0,0,0,0.15);
+            text-align:center;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
 
-button{
-background:#28a745;
-color:white;
-padding:12px 20px;
-border:none;
-border-radius:5px;
-font-size:16px;
-cursor:pointer;
-}
+        body.dark .main{
+            background:#1f2937;
+            color:#f9fafb;
+        }
 
-button:hover{
-background:#218838;
-}
+        .subtext{
+            color:#666;
+        }
 
-.progress{
-width:100%;
-background:#ddd;
-border-radius:10px;
-margin-top:20px;
-}
+        body.dark .subtext{
+            color:#d1d5db;
+        }
 
-.progress-bar{
-height:25px;
-background:#28a745;
-border-radius:10px;
-text-align:center;
-color:white;
-line-height:25px;
-font-weight:bold;
-}
+        .drop-zone{
+            border:2px dashed #bbb;
+            padding:25px;
+            border-radius:12px;
+            margin-top:15px;
+            cursor:pointer;
+            transition:0.3s;
+            font-size:14px;
+            color:#555;
+        }
 
-.result{
-margin-top:30px;
-text-align:left;
-}
+        .drop-zone:hover{
+            background:#f8f9ff;
+            border-color:#4f46e5;
+        }
 
-.skills{
-padding:10px;
-border-radius:5px;
-margin-top:10px;
-}
+        body.dark .drop-zone{
+            border-color:#6b7280;
+            color:#e5e7eb;
+            background:#111827;
+        }
 
-.matched{
-background:#e8f5e9;
-color:#2e7d32;
-}
+        body.dark .drop-zone:hover{
+            background:#273449;
+            border-color:#818cf8;
+        }
 
-.missing{
-background:#ffebee;
-color:#c62828;
-}
+        select, textarea{
+            width:100%;
+            padding:12px;
+            margin-top:15px;
+            border-radius:10px;
+            border:1px solid #ddd;
+            font-size:14px;
+            box-sizing:border-box;
+            background:white;
+            color:#111827;
+            transition:0.3s;
+        }
 
-.analysis{
-background:#f1f3f6;
-padding:10px;
-border-radius:5px;
-}
+        body.dark select,
+        body.dark textarea{
+            background:#111827;
+            color:#f9fafb;
+            border:1px solid #4b5563;
+        }
 
-.mode{
-margin-top:15px;
-font-weight:bold;
-color:#555;
-}
+        textarea{
+            height:110px;
+        }
 
-</style>
+        button{
+            margin-top:20px;
+            padding:13px;
+            width:100%;
+            border:none;
+            border-radius:10px;
+            background: linear-gradient(135deg,#ff7e5f,#feb47b);
+            color:white;
+            font-size:15px;
+            cursor:pointer;
+            transition:0.3s;
+        }
 
+        button:hover{
+            transform:scale(1.03);
+        }
+
+        .result-section{
+            width:720px;
+            margin:20px auto;
+        }
+
+        .card{
+            background:white;
+            padding:18px;
+            border-radius:14px;
+            margin-top:18px;
+            box-shadow:0 4px 15px rgba(0,0,0,0.08);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark .card{
+            background:#1f2937;
+            color:#f9fafb;
+        }
+
+        .score-card{
+            background: linear-gradient(135deg,#6366f1,#4f46e5);
+            color:white;
+            text-align:center;
+            padding:25px;
+        }
+
+        .progress{
+            background:#eee;
+            border-radius:20px;
+            overflow:hidden;
+            margin-top:10px;
+        }
+
+        body.dark .progress{
+            background:#374151;
+        }
+
+        .progress-bar{
+            height:22px;
+            transition:1s;
+        }
+
+        .tag{
+            display:inline-block;
+            padding:5px 10px;
+            margin:4px;
+            border-radius:20px;
+            font-size:11px;
+        }
+
+        .match{ background:#dcfce7; color:#166534; }
+        .miss{ background:#fee2e2; color:#991b1b; }
+
+        .chart-container{
+            width:260px;
+            margin:20px auto;
+        }
+
+        canvas{
+            max-width:100% !important;
+            height:auto !important;
+        }
+
+        .loader{
+            border:6px solid #f3f3f3;
+            border-top:6px solid #4f46e5;
+            border-radius:50%;
+            width:40px;
+            height:40px;
+            animation: spin 1s linear infinite;
+            margin:auto;
+        }
+
+        @keyframes spin{
+            0%{ transform: rotate(0deg);}
+            100%{ transform: rotate(360deg);}
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+    <div class="top-bar">
+        <button type="button" class="toggle-btn" id="themeToggle">🌙 Dark Mode</button>
+    </div>
 
-<h1>AI Resume Analyzer</h1>
+    <div class="main">
+        <h1>🚀 AI Resume Analyzer</h1>
+        <p class="subtext">Analyze your resume instantly using AI</p>
 
-<form id="uploadForm">
+        <form id="uploadForm">
+            <div class="drop-zone" id="dropZone">
+                📂 Drag & Drop or Click to Upload Resume
+                <input type="file" name="resume" id="fileInput" hidden required>
+            </div>
 
-<label><b>Upload Resume</b></label><br>
-<input type="file" name="resume" required>
+            <select name="role" id="roleSelect">
+                <option value="">Custom Job Description</option>
+                <option value="Software Developer">Software Developer</option>
+                <option value="Data Analyst">Data Analyst</option>
+                <option value="Web Developer">Web Developer</option>
+                <option value="Machine Learning Engineer">ML Engineer</option>
+            </select>
 
-<br><br>
+            <textarea id="jdBox" name="job_description" placeholder="Paste Job Description"></textarea>
 
-<!-- 🔥 NEW: ROLE DROPDOWN -->
-<label><b>Select Role (Optional)</b></label><br>
+            <button type="submit">✨ Analyze Resume</button>
+        </form>
+    </div>
 
-<select name="role" id="roleSelect">
-<option value="">-- Use Custom Job Description --</option>
-<option value="Software Developer">Software Developer</option>
-<option value="Data Analyst">Data Analyst</option>
-<option value="Web Developer">Web Developer</option>
-<option value="Machine Learning Engineer">Machine Learning Engineer</option>
-</select>
+    <div id="result" class="result-section"></div>
 
-<br><br>
+    <script>
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("fileInput");
+        const roleSelect = document.getElementById("roleSelect");
+        const jdBox = document.getElementById("jdBox");
+        const resultBox = document.getElementById("result");
+        const uploadForm = document.getElementById("uploadForm");
+        const themeToggle = document.getElementById("themeToggle");
 
-<label><b>Paste Job Description</b></label><br>
+        // Theme setup
+        function setTheme(mode) {
+            if (mode === "dark") {
+                document.body.classList.add("dark");
+                themeToggle.textContent = "☀️ Light Mode";
+                localStorage.setItem("theme", "dark");
+            } else {
+                document.body.classList.remove("dark");
+                themeToggle.textContent = "🌙 Dark Mode";
+                localStorage.setItem("theme", "light");
+            }
+        }
 
-<textarea id="jdBox" name="job_description" rows="6" placeholder="Paste Job Description Here..."></textarea>
+        const savedTheme = localStorage.getItem("theme") || "light";
+        setTheme(savedTheme);
 
-<br><br>
+        themeToggle.addEventListener("click", () => {
+            const isDark = document.body.classList.contains("dark");
+            setTheme(isDark ? "light" : "dark");
+        });
 
-<button type="submit">Analyze Resume</button>
+        dropZone.onclick = () => fileInput.click();
 
-</form>
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files && fileInput.files[0]) {
+                dropZone.innerHTML = `✅ ${fileInput.files[0].name}`;
+            }
+        });
 
-<div id="result" class="result"></div>
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = "#4f46e5";
+        };
 
-</div>
+        dropZone.ondragleave = () => {
+            dropZone.style.borderColor = "";
+        };
 
-<script>
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = "";
 
-// 🔥 Disable textarea when role selected
-const roleSelect = document.getElementById("roleSelect");
-const jdBox = document.getElementById("jdBox");
+            const files = e.dataTransfer.files;
 
-roleSelect.addEventListener("change", () => {
-    if(roleSelect.value !== ""){
-        jdBox.disabled = true;
-        jdBox.placeholder = "Using predefined Job Description...";
-    } else {
-        jdBox.disabled = false;
-        jdBox.placeholder = "Paste Job Description Here...";
-    }
-});
+            if (files && files.length > 0) {
+                const dt = new DataTransfer();
+                dt.items.add(files[0]);
+                fileInput.files = dt.files;
+                dropZone.innerHTML = `✅ ${files[0].name}`;
+            }
+        };
 
+        roleSelect.onchange = (e) => {
+            jdBox.disabled = e.target.value !== "";
 
-document.getElementById("uploadForm").onsubmit = async function(e){
+            if (e.target.value !== "") {
+                jdBox.placeholder = "Using predefined job description";
+            } else {
+                jdBox.placeholder = "Paste Job Description";
+            }
+        };
 
-e.preventDefault()
+        function animateScore(id, finalScore) {
+            let current = 0;
+            const el = document.getElementById(id);
+            const roundedFinal = Math.round(finalScore);
 
-let formData = new FormData(this)
+            const interval = setInterval(() => {
+                current += 1;
+                el.innerText = current + "%";
 
-let response = await fetch("/upload",{
-method:"POST",
-body:formData
-})
+                if (current >= roundedFinal) {
+                    el.innerText = finalScore + "%";
+                    clearInterval(interval);
+                }
+            }, 15);
+        }
 
-let data = await response.json()
+        uploadForm.onsubmit = async function(e) {
+            e.preventDefault();
 
-if(data.error){
-document.getElementById("result").innerHTML = `<p style="color:red">${data.error}</p>`
-return
-}
+            if (!fileInput.files || !fileInput.files[0]) {
+                resultBox.innerHTML = `
+                    <div class="card">
+                        <h3 style="color:#dc2626;">Error</h3>
+                        <p>Please upload a resume file first.</p>
+                    </div>
+                `;
+                return;
+            }
 
-let score = data.score
+            resultBox.innerHTML = `
+                <div style="text-align:center; padding:30px;">
+                    <div class="loader"></div>
+                    <p>Analyzing your resume...</p>
+                </div>
+            `;
 
-let matched = data.matched_skills.map(skill => `✔ ${skill}`).join("<br>")
-let missing = data.missing_skills.map(skill => `✘ ${skill}`).join("<br>")
+            try {
+                const formData = new FormData();
+                formData.append("resume", fileInput.files[0]);
+                formData.append("job_description", jdBox.value);
+                formData.append("role", roleSelect.value);
 
-document.getElementById("result").innerHTML = `
+                const res = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
 
-<div class="mode">Mode: ${data.selected_role}</div>
+                const data = await res.json();
 
-<h3>Resume Match Score</h3>
+                if (data.error) {
+                    resultBox.innerHTML = `
+                        <div class="card">
+                            <h3 style="color:#dc2626;">Error</h3>
+                            <p>${data.error}</p>
+                        </div>
+                    `;
+                    return;
+                }
 
-<div class="progress">
-<div class="progress-bar" style="width:${score}%">${score}%</div>
-</div>
+                const score = data.score || 0;
+                const color = score > 75 ? "#22c55e" : score > 50 ? "#f59e0b" : "#ef4444";
 
-<h3>Matched Skills</h3>
-<div class="skills matched">
-${matched || "No matched skills detected"}
-</div>
+                const matched = (data.matched_skills || [])
+                    .map(s => `<span class="tag match">${s}</span>`)
+                    .join("");
 
-<h3>Missing Skills</h3>
-<div class="skills missing">
-${missing || "No missing skills"}
-</div>
+                const missing = (data.missing_skills || [])
+                    .map(s => `<span class="tag miss">${s}</span>`)
+                    .join("");
 
-<h3>Analysis</h3>
-<div class="analysis">
-${data.explanation}
-</div>
+                const suggestions = (data.suggestions || [])
+                    .map(s => `<li>${s}</li>`)
+                    .join("");
 
-`
+                resultBox.innerHTML = `
+                    <div class="card score-card">
+                        <h2 id="scoreValue">0%</h2>
+                        <p>${data.selected_role || "Custom JD"}</p>
 
-}
+                        <div class="progress">
+                            <div class="progress-bar" style="width:${score}%; background:${color}"></div>
+                        </div>
+                    </div>
 
-</script>
+                    <div class="card">
+                        <h3>Matched Skills</h3>
+                        ${matched || "—"}
+                    </div>
+
+                    <div class="card">
+                        <h3>Missing Skills</h3>
+                        ${missing || "—"}
+                    </div>
+
+                    <div class="card">
+                        <h3>Explanation</h3>
+                        <p>${data.explanation || "No explanation available."}</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Suggestions</h3>
+                        ${suggestions ? `<ul style="text-align:left;">${suggestions}</ul>` : "—"}
+                    </div>
+
+                    <div class="card">
+                        <div class="chart-container">
+                            <canvas id="chart"></canvas>
+                        </div>
+                    </div>
+                `;
+
+                animateScore("scoreValue", score);
+
+                if (score > 80) {
+                    confetti({ particleCount: 100, spread: 70 });
+                }
+
+                resultBox.scrollIntoView({ behavior: "smooth" });
+
+                new Chart(document.getElementById("chart"), {
+                    type: "doughnut",
+                    data: {
+                        labels: ["Matched", "Missing"],
+                        datasets: [{
+                            data: [
+                                (data.matched_skills || []).length,
+                                (data.missing_skills || []).length
+                            ]
+                        }]
+                    }
+                });
+
+            } catch (error) {
+                resultBox.innerHTML = `
+                    <div class="card">
+                        <h3 style="color:#dc2626;">Error</h3>
+                        <p>Something went wrong while analyzing the resume.</p>
+                    </div>
+                `;
+                console.error(error);
+            }
+        };
+    </script>
 
 </body>
-
 </html>
