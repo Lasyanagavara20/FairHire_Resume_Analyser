@@ -1,18 +1,18 @@
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def calculate_similarity(resume, jd):
     try:
-        resume = resume[:2000]
-        jd = jd[:2000]
+        resume = resume[:4000]
+        jd = jd[:4000]
 
-        embeddings = model.encode([resume, jd])
+        vectorizer = TfidfVectorizer(stop_words="english")
+        tfidf_matrix = vectorizer.fit_transform([resume, jd])
 
         similarity_score = cosine_similarity(
-            [embeddings[0]],
-            [embeddings[1]]
+            tfidf_matrix[0:1],
+            tfidf_matrix[1:2]
         )[0][0]
 
         return float(similarity_score)
